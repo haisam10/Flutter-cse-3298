@@ -1,8 +1,7 @@
-// main.dart - Week 2: Multi-screen Task Manager
 import 'package:flutter/material.dart';
+import 'screens/tasks_screen.dart';
 import 'screens/add_task_screen.dart';
-import 'screens/profile_screen.dart' hide TaskDetailScreen;
-import 'screens/task_detail_screen.dart';
+import 'screens/profile_screen.dart';
 
 void main() {
   runApp(const TaskManagerApp());
@@ -15,8 +14,8 @@ class TaskManagerApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Advanced Task Manager',
-      theme: ThemeData(primarySwatch: Colors.purple, fontFamily: 'Roboto'),
+      title: 'Task Manager',
+      theme: ThemeData(primarySwatch: Colors.purple),
       home: const HomeScreen(),
     );
   }
@@ -30,97 +29,35 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
+  int index = 0;
+  final List<Map<String, dynamic>> tasks = [];
 
-  // Screens for bottom navigation
-  final List<Widget> _screens = [
-    TasksScreen(),
-    AddTaskScreen(),
-    // ProfileScreen(),
-  ];
-
-  void _onItemTapped(int index) {
+  void addTask(Map<String, dynamic> task) {
     setState(() {
-      _selectedIndex = index;
+      tasks.add(task);
+      index = 0;
     });
   }
+
+  late final screens = [
+    TasksScreen(tasks: tasks),
+    AddTaskScreen(onAddTask: addTask),
+    ProfileScreen(tasks: tasks),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          _selectedIndex == 0
-              ? 'My Tasks'
-              : _selectedIndex == 1
-              ? 'Add Task'
-              : 'Profile',
-        ),
-        actions: [
-          _selectedIndex == 0
-              ? IconButton(icon: const Icon(Icons.search), onPressed: () {})
-              : Container(),
-        ],
-      ),
-      body: _screens[_selectedIndex],
+      appBar: AppBar(title: Text(['Tasks', 'Add Task', 'Profile'][index])),
+      body: screens[index],
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
+        currentIndex: index,
+        onTap: (i) => setState(() => index = i),
+        items: const [
           BottomNavigationBarItem(icon: Icon(Icons.task), label: 'Tasks'),
-          BottomNavigationBarItem(icon: Icon(Icons.add_circle), label: 'Add'),
+          BottomNavigationBarItem(icon: Icon(Icons.add), label: 'Add Task'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.purple,
-        onTap: _onItemTapped,
-      ),
-    );
-  }
-}
-
-class TasksScreen extends StatelessWidget {
-  const TasksScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        TaskCard(
-          title: 'Complete Week 2 Lab',
-          description: 'Navigation & Forms implementation',
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const TaskDetailScreen()),
-            );
-          },
-        ),
-        // More task cards...
-      ],
-    );
-  }
-}
-
-class TaskCard extends StatelessWidget {
-  final String title;
-  final String description;
-  final VoidCallback onTap;
-
-  const TaskCard({
-    super.key,
-    required this.title,
-    required this.description,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: ListTile(
-        title: Text(title),
-        subtitle: Text(description),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: onTap,
       ),
     );
   }

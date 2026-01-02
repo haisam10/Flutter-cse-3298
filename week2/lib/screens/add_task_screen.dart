@@ -1,60 +1,36 @@
-// add_task_screen.dart - Form with validation
 import 'package:flutter/material.dart';
 
 class AddTaskScreen extends StatefulWidget {
-  const AddTaskScreen({super.key});
+  final Function(Map<String, dynamic>) onAddTask;
+  const AddTaskScreen({super.key, required this.onAddTask});
 
   @override
   State<AddTaskScreen> createState() => _AddTaskScreenState();
 }
 
 class _AddTaskScreenState extends State<AddTaskScreen> {
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _titleController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  final titleCtrl = TextEditingController();
+  final descCtrl = TextEditingController();
 
-  String _selectedCategory = 'work';
-  String _selectedPriority = 'medium';
-  DateTime _dueDate = DateTime.now().add(const Duration(days: 1));
+  String category = 'Work';
+  DateTime dueDate = DateTime.now();
 
-  final List<String> categories = ['work', 'personal', 'study', 'shopping'];
-  final List<String> priorities = ['low', 'medium', 'high'];
-
-  Future<void> _selectDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _dueDate,
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2025, 12, 31),
-    );
-    if (picked != null && picked != _dueDate) {
-      setState(() {
-        _dueDate = picked;
-      });
-    }
-  }
-
-  void _submitForm() {
+  void submit() {
     if (_formKey.currentState!.validate()) {
-      // Form is valid, process the data
-      final Map<String, dynamic> newTask = {
-        'title': _titleController.text,
-        'description': _descriptionController.text,
-        'category': _selectedCategory,
-        'priority': _selectedPriority,
-        'dueDate': _dueDate,
-        'createdAt': DateTime.now(),
-      };
+      widget.onAddTask({
+        'title': titleCtrl.text,
+        'description': descCtrl.text,
+        'category': category,
+        'date': dueDate,
+      });
 
-      // Show success message and navigate back
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Task "${_titleController.text}" added successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Task added successfully')));
 
-      Navigator.pop(context, newTask);
+      titleCtrl.clear();
+      descCtrl.clear();
     }
   }
 
@@ -65,130 +41,70 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       child: Form(
         key: _formKey,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'Add New Task',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 20),
-
-            // Task Title Field
             TextFormField(
-              controller: _titleController,
+              controller: titleCtrl,
               decoration: const InputDecoration(
                 labelText: 'Task Title',
-                prefixIcon: Icon(Icons.title),
                 border: OutlineInputBorder(),
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a task title';
-                }
-                if (value.length < 3) {
-                  return 'Title must be at least 3 characters';
-                }
-                return null;
-              },
+              validator: (v) =>
+                  v == null || v.length < 3 ? 'Min 3 characters' : null,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 15),
 
-            // Description Field
             TextFormField(
-              controller: _descriptionController,
+              controller: descCtrl,
               decoration: const InputDecoration(
-                labelText: 'Description (Optional)',
-                prefixIcon: Icon(Icons.description),
+                labelText: 'Description',
                 border: OutlineInputBorder(),
               ),
               maxLines: 3,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 15),
 
-            // Category Dropdown
-            DropdownButtonFormField<String>(
-              value: _selectedCategory,
+            DropdownButtonFormField(
+              value: category,
+              items: [
+                'Work',
+                'Study',
+                'Personal',
+              ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+              onChanged: (v) => setState(() => category = v!),
               decoration: const InputDecoration(
                 labelText: 'Category',
-                prefixIcon: Icon(Icons.category),
                 border: OutlineInputBorder(),
               ),
-              items: categories.map((String category) {
-                return DropdownMenuItem<String>(
-                  value: category,
-                  child: Text(category.toUpperCase()),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedCategory = newValue!;
-                });
-              },
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 15),
 
-            // Priority Dropdown
-            DropdownButtonFormField<String>(
-              value: _selectedPriority,
-              decoration: const InputDecoration(
-                labelText: 'Priority',
-                prefixIcon: Icon(Icons.priority_high),
-                border: OutlineInputBorder(),
-              ),
-              items: priorities.map((String priority) {
-                return DropdownMenuItem<String>(
-                  value: priority,
-                  child: Text(priority.toUpperCase()),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedPriority = newValue!;
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // Due Date Picker
             Row(
               children: [
-                const Icon(Icons.calendar_today, color: Colors.grey),
-                const SizedBox(width: 10),
                 const Text('Due Date:'),
-                const SizedBox(width: 10),
                 TextButton(
-                  onPressed: _selectDate,
+                  onPressed: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime(2026),
+                      initialDate: dueDate,
+                    );
+                    if (picked != null) {
+                      setState(() => dueDate = picked);
+                    }
+                  },
                   child: Text(
-                    '${_dueDate.day}/${_dueDate.month}/${_dueDate.year}',
-                    style: const TextStyle(fontSize: 16),
+                    '${dueDate.day}/${dueDate.month}/${dueDate.year}',
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 30),
 
-            // Submit Button
-            ElevatedButton(
-              onPressed: _submitForm,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-              child: const Text(
-                'Add Task',
-                style: TextStyle(fontSize: 18, color: Colors.white),
-              ),
-            ),
+            ElevatedButton(onPressed: submit, child: const Text('Add Task')),
           ],
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _titleController.dispose();
-    _descriptionController.dispose();
-    super.dispose();
   }
 }
