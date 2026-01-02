@@ -1,7 +1,7 @@
 // main.dart - Week 2: Multi-screen Task Manager
 import 'package:flutter/material.dart';
 import 'screens/add_task_screen.dart';
-import 'screens/profile_screen.dart';
+import 'screens/profile_screen.dart' hide TaskDetailScreen;
 import 'screens/task_detail_screen.dart';
 
 void main() {
@@ -36,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _screens = [
     TasksScreen(),
     AddTaskScreen(),
-    ProfileScreen(),
+    // ProfileScreen(),
   ];
 
   void _onItemTapped(int index) {

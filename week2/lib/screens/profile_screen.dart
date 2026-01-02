@@ -1,57 +1,38 @@
-// profile_screen.dart - User profile with settings
+// task_detail_screen.dart - Detailed task view
 import 'package:flutter/material.dart';
-import 'package:week2/models/task.dart';
 
-class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key, required List<Task> tasks});
+class TaskDetailScreen extends StatefulWidget {
+  final Map<String, dynamic>? task;
+
+  const TaskDetailScreen({super.key, this.task});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  State<TaskDetailScreen> createState() => _TaskDetailScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
-  bool _notificationsEnabled = true;
-  bool _darkModeEnabled = false;
-  bool _weeklyReportEnabled = true;
+class _TaskDetailScreenState extends State<TaskDetailScreen> {
+  bool _isCompleted = false;
+  bool _isFavorite = false;
 
-  void _showEditProfileDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Profile'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(decoration: InputDecoration(labelText: 'Name')),
-            TextField(decoration: InputDecoration(labelText: 'Email')),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // Save profile changes
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Profile updated successfully!')),
-              );
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
+  Color _getPriorityColor(String priority) {
+    switch (priority.toLowerCase()) {
+      case 'high':
+        return Colors.red;
+      case 'medium':
+        return Colors.orange;
+      case 'low':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
   }
 
-  void _showLogoutDialog() {
+  void _showDeleteDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Log Out'),
-        content: const Text('Are you sure you want to log out?'),
+        title: const Text('Delete Task'),
+        content: const Text('Are you sure you want to delete this task?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -59,14 +40,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           ElevatedButton(
             onPressed: () {
-              // Perform logout logic
+              // Delete task logic
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Logged out successfully')),
-              );
+              Navigator.pop(
+                context,
+                true,
+              ); // Return to previous screen with delete flag
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Log Out'),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -75,157 +57,169 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          // Profile Header
-          Column(
-            children: [
-              CircleAvatar(
-                radius: 60,
-                backgroundColor: Colors.purple,
-                child: const Icon(Icons.person, size: 50, color: Colors.white),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Alex Johnson',
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              Text(
-                'flutter.dev@example.com',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyLarge?.copyWith(color: Colors.grey),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _showEditProfileDialog,
-                child: const Text('Edit Profile'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 30),
-
-          // Statistics
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: BorderRadius.circular(12),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Task Details'),
+        actions: [
+          IconButton(
+            icon: Icon(
+              _isFavorite ? Icons.favorite : Icons.favorite_border,
+              color: _isFavorite ? Colors.red : null,
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+            onPressed: () {
+              setState(() {
+                _isFavorite = !_isFavorite;
+              });
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: _showDeleteDialog,
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Task Title and Status
+            Row(
               children: [
-                Column(
-                  children: [
-                    Text(
-                      '12',
-                      style: Theme.of(context).textTheme.headlineLarge
-                          ?.copyWith(
-                            color: Colors.purple,
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    Text(
-                      'Total Tasks',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
+                Checkbox(
+                  value: _isCompleted,
+                  onChanged: (value) {
+                    setState(() {
+                      _isCompleted = value ?? false;
+                    });
+                  },
                 ),
-                Column(
-                  children: [
-                    Text(
-                      '7',
-                      style: Theme.of(context).textTheme.headlineLarge
-                          ?.copyWith(
-                            color: Colors.green,
-                            fontWeight: FontWeight.bold,
-                          ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Complete Week 2 Lab',
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      decoration: _isCompleted
+                          ? TextDecoration.lineThrough
+                          : TextDecoration.none,
                     ),
-                    Text(
-                      'Completed',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ),
-                Column(
-                  children: [
-                    Text(
-                      '5',
-                      style: Theme.of(context).textTheme.headlineLarge
-                          ?.copyWith(
-                            color: Colors.orange,
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    Text(
-                      'Pending',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 30),
+            const SizedBox(height: 20),
 
-          // Settings Section
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Settings',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 16),
-              SwitchListTile(
-                title: const Text('Notifications'),
-                subtitle: const Text('Receive task reminders'),
-                value: _notificationsEnabled,
-                onChanged: (value) {
-                  setState(() {
-                    _notificationsEnabled = value;
-                  });
-                },
-              ),
-              SwitchListTile(
-                title: const Text('Dark Mode'),
-                subtitle: const Text('Use dark theme'),
-                value: _darkModeEnabled,
-                onChanged: (value) {
-                  setState(() {
-                    _darkModeEnabled = value;
-                  });
-                },
-              ),
-              SwitchListTile(
-                title: const Text('Weekly Report'),
-                subtitle: const Text('Get weekly task summary'),
-                value: _weeklyReportEnabled,
-                onChanged: (value) {
-                  setState(() {
-                    _weeklyReportEnabled = value;
-                  });
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 40),
+            // Task Details Card
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Description',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Implement navigation between screens, create forms with validation, and build a complete profile screen with settings.',
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    const SizedBox(height: 20),
 
-          // Logout Button
-          ElevatedButton(
-            onPressed: _showLogoutDialog,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              minimumSize: const Size(double.infinity, 50),
+                    // Task Metadata
+                    Row(
+                      children: [
+                        Icon(Icons.category, color: Colors.grey),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Category: ',
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                        Text(
+                          'Study',
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+
+                    Row(
+                      children: [
+                        Icon(Icons.priority_high, color: Colors.grey),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Priority: ',
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _getPriorityColor('high'),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            'HIGH',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+
+                    Row(
+                      children: [
+                        Icon(Icons.calendar_today, color: Colors.grey),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Due Date: ',
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                        Text(
+                          'December 15, 2024 - 10:00 AM',
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
-            child: const Text(
-              'Log Out',
-              style: TextStyle(fontSize: 16, color: Colors.white),
+            const SizedBox(height: 30),
+
+            // Action Buttons
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Edit task logic
+                    },
+                    child: const Text('Edit Task'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      // Share task logic
+                    },
+                    child: const Text('Share'),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

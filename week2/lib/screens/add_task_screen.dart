@@ -1,9 +1,8 @@
 // add_task_screen.dart - Form with validation
 import 'package:flutter/material.dart';
-import 'package:week2/models/task.dart';
 
 class AddTaskScreen extends StatefulWidget {
-  const AddTaskScreen({super.key, required void Function(Task task) onAddTask});
+  const AddTaskScreen({super.key});
 
   @override
   State<AddTaskScreen> createState() => _AddTaskScreenState();
